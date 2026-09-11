@@ -25,13 +25,39 @@ export async function POST(request: Request) {
       );
     }
 
+    // Cek apakah akun sedang terkunci
+    const now = new Date();
+    if (user.lockedUntil && user.lockedUntil > now) {
+      const remainingMs = user.lockedUntil.getTime() - now.getTime();
+      const remainingMinutes = Math.ceil(remainingMs / 60000);
+      return NextResponse.json(
+        { error: `Akun terkunci sementara karena terlalu banyak percobaan login gagal. Coba lagi dalam ${remainingMinutes} menit.` },
+        { status: 429 }
+      );
+    }
+
     const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
+      const newFailCount = (user.failedLoginAttempts ?? 0) + 1;
+      const lockData =
+        newFailCount >= 5
+          ? { lockedUntil: new Date(now.getTime() + 15 * 60 * 1000) }
+          : {};
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: newFailCount, ...lockData },
+      });
       return NextResponse.json(
         { error: 'Username atau password salah.' },
         { status: 401 }
       );
     }
+
+    // Reset counter setelah login berhasil
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
 
     const token = await signSessionToken({
       userId: user.id,

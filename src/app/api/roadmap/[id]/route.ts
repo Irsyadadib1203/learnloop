@@ -18,6 +18,9 @@ export async function GET(
           },
           orderBy: { createdAt: 'desc' },
         },
+        tasks: {
+          orderBy: { order: 'asc' },
+        },
       },
     });
 
@@ -71,6 +74,7 @@ export async function PUT(
       },
       include: {
         notes: true,
+        tasks: { orderBy: { order: 'asc' } },
       },
     });
 

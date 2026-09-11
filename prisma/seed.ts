@@ -105,6 +105,69 @@ async function main() {
   }
   console.log(`🗺️  ${stagesData.length} Roadmap Stages berhasil disiapkan.`);
 
+  // 3b. Seeding Concrete RoadmapTasks (Sub-tahap)
+  const tasksData: Record<string, { title: string; resourceUrl?: string; isDone: boolean; order: number }[]> = {
+    'Fondasi OOP & Design Pattern': [
+      { title: 'Pahami 4 pilar OOP: Encapsulation, Abstraction, Inheritance, Polymorphism', isDone: true, order: 0 },
+      { title: 'Implementasikan Interface & Abstract Class pada studi kasus nyata', isDone: true, order: 1 },
+      { title: 'Kuasai 5 Prinsip SOLID (Single Responsibility, Open/Closed, Liskov, Interface Segregation, Dependency Inversion)', resourceUrl: 'https://refactoring.guru/design-patterns/solid-principles', isDone: true, order: 2 },
+      { title: 'Praktek Factory & Strategy Pattern dalam arsitektur OOP', resourceUrl: 'https://refactoring.guru/design-patterns/strategy', isDone: true, order: 3 },
+    ],
+    'Service Layer Pattern di Laravel': [
+      { title: 'Pahami perbedaan tanggung jawab Controller vs Service Layer', isDone: true, order: 0 },
+      { title: 'Baca dokumentasi resmi Service Container & Dependency Injection Laravel', resourceUrl: 'https://laravel.com/docs/container', isDone: true, order: 1 },
+      { title: 'Refactor 1 controller gemuk (Fat Controller) menjadi skinny controller dengan Service class', isDone: false, order: 2 },
+      { title: 'Tulis unit test terisolasi untuk Service class tanpa menyentuh controller', isDone: false, order: 3 },
+    ],
+    'Queue & Background Jobs di Laravel': [
+      { title: 'Pahami konsep asynchronous processing & database queue driver', resourceUrl: 'https://laravel.com/docs/queues', isDone: false, order: 0 },
+      { title: 'Buat Mailable class dengan interface ShouldQueue untuk pengiriman email latar belakang', isDone: false, order: 1 },
+      { title: 'Konfigurasi worker supervisor, retry logic, dan failed jobs handling', isDone: false, order: 2 },
+      { title: 'Eksperimen rate limiting pada dispatching jobs berfrekuensi tinggi', isDone: false, order: 3 },
+    ],
+    'Next.js App Router dari Nol': [
+      { title: 'Pahami perbedaan mendasar React Server Components (RSC) vs Client Components', resourceUrl: 'https://nextjs.org/docs/app/building-your-application/rendering/server-components', isDone: true, order: 0 },
+      { title: 'Kuasai nested layouts, loading UI (loading.tsx), dan streaming SSR', isDone: true, order: 1 },
+      { title: 'Implementasikan Server Actions untuk mutasi data form yang aman', isDone: false, order: 2 },
+      { title: 'Pahami caching & revalidation strategy (revalidatePath / fetch cache)', isDone: false, order: 3 },
+    ],
+    'Golang Fundamental & Concurrency': [
+      { title: 'Kuasai syntax dasar: Struct, Interface, Slice, dan Pointers', resourceUrl: 'https://go.dev/tour/', isDone: false, order: 0 },
+      { title: 'Praktek Goroutines & Channels untuk komunikasi thread yang aman', isDone: false, order: 1 },
+      { title: 'Gunakan sync.WaitGroup dan Mutex untuk sinkronisasi state bersama', isDone: false, order: 2 },
+      { title: 'Bangun 1 HTTP REST API sederhana menggunakan Gin / Chi router', isDone: false, order: 3 },
+    ],
+    'Gap Teknis: Tailwind, Redis, State Management': [
+      { title: 'Kuasai Tailwind CSS v4 styling, custom variants, dan fluid responsive layouts', isDone: false, order: 0 },
+      { title: 'Implementasikan Redis untuk in-memory caching data dan session storage', isDone: false, order: 1 },
+      { title: 'Gunakan Zustand untuk client-side state management yang clean dan efisien', isDone: false, order: 2 },
+    ],
+  };
+
+  for (const [stageTitle, tasks] of Object.entries(tasksData)) {
+    const stageId = stageMap[stageTitle];
+    if (!stageId) continue;
+
+    for (const t of tasks) {
+      const existingTask = await prisma.roadmapTask.findFirst({
+        where: { stageId, title: t.title },
+      });
+
+      if (!existingTask) {
+        await prisma.roadmapTask.create({
+          data: {
+            stageId,
+            title: t.title,
+            resourceUrl: t.resourceUrl || null,
+            isDone: t.isDone,
+            order: t.order,
+          },
+        });
+      }
+    }
+  }
+  console.log(`📋 Roadmap Tasks (Sub-tahap) berhasil disiapkan.`);
+
   // 4. Catatan Belajar Riil terhubung ke Roadmap Stages
   const initialNotes = [
     {

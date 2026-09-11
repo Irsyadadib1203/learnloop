@@ -29,40 +29,57 @@ enum StageStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  username            String    @unique
+  passwordHash        String
+  telegramChatId      String?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 
 model RoadmapStage {
-  id          String      @id @default(cuid())
+  id          String        @id @default(cuid())
   title       String
-  description String      @db.Text
-  order       Int         @default(0)
-  status      StageStatus @default(NOT_STARTED)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  description String        @db.Text
+  order       Int           @default(0)
+  status      StageStatus   @default(NOT_STARTED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   notes       Note[]
+  tasks       RoadmapTask[]
+}
+
+model RoadmapTask {
+  id          String       @id @default(cuid())
+  stageId     String
+  stage       RoadmapStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  title       String
+  resourceUrl String?
+  isDone      Boolean      @default(false)
+  order       Int          @default(0)
+  createdAt   DateTime     @default(now())
 }
 
 model Note {
-  id            String        @id @default(cuid())
-  title         String
-  topic         String
-  content       String        @db.Text
-  whyImportant  String?       @db.Text
-  codeExample   String?       @db.Text
-  masteryStatus MasteryStatus @default(STILL_UNSURE)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  title             String
+  topic             String
+  content           String        @db.Text
+  whyImportant      String?       @db.Text
+  codeExample       String?       @db.Text
+  masteryStatus     MasteryStatus @default(STILL_UNSURE)
+  aiReviewFeedback  String?       @db.Text
+  aiReviewedAt      DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  stageId       String?
-  stage         RoadmapStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId           String?
+  stage             RoadmapStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
 
-  reviewCard    ReviewCard?
+  reviewCard        ReviewCard?
 }
 
 model ReviewCard {

@@ -3,12 +3,15 @@
 import React, { useState } from 'react';
 import { ThemeToggle } from '@/components/settings/ThemeToggle';
 import { ChangePasswordForm } from '@/components/settings/ChangePasswordForm';
+import { TelegramSettings } from '@/components/settings/TelegramSettings';
+import { ImportDataButton } from '@/components/settings/ImportDataButton';
 import {
   Settings,
   Moon,
   Lock,
   Download,
   Database,
+  Send,
   Loader2,
   CheckCircle2,
 } from 'lucide-react';
@@ -54,7 +57,7 @@ export default function SettingsPage() {
             Pengaturan Aplikasi
           </h1>
           <p className="text-sm text-stone-500 dark:text-stone-400">
-            Kelola preferensi tema, keamanan akun, dan backup data Anda.
+            Kelola preferensi tema, notifikasi bot Telegram, keamanan akun, dan backup data Anda.
           </p>
         </div>
       </div>
@@ -72,29 +75,42 @@ export default function SettingsPage() {
           <ThemeToggle />
         </div>
 
-        {/* Section 2: Ganti Password */}
+        {/* Section 2: Telegram Bot Reminder */}
+        <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-1 text-stone-900 dark:text-stone-100 font-bold">
+            <Send className="w-4 h-4 text-sky-500" />
+            <h2>Pengingat Telegram Bot</h2>
+          </div>
+          <p className="text-xs text-stone-500 dark:text-stone-400 mb-4">
+            Terima pesan pengingat otomatis di Telegram saat ada kartu flashcard yang jatuh tempo dan streak hampir putus.
+          </p>
+          <TelegramSettings />
+        </div>
+
+        {/* Section 3: Ganti Password */}
         <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
           <div className="flex items-center gap-2.5 mb-1 text-stone-900 dark:text-stone-100 font-bold">
             <Lock className="w-4 h-4 text-orange-500" />
             <h2>Keamanan & Password</h2>
           </div>
           <p className="text-xs text-stone-500 dark:text-stone-400 mb-4">
-            Ganti password akun pribadimu. Setelah berhasil, kamu akan diarahkan untuk login ulang.
+            Ganti password akun pribadimu. Dilengkapi proteksi brute-force (kunci 15 menit jika 5x salah).
           </p>
           <ChangePasswordForm />
         </div>
 
-        {/* Section 3: Ekspor Data Backup */}
+        {/* Section 4: Backup & Restore Data */}
         <div className="bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
           <div className="flex items-center gap-2.5 mb-1 text-stone-900 dark:text-stone-100 font-bold">
             <Database className="w-4 h-4 text-orange-500" />
-            <h2>Backup & Ekspor Data</h2>
+            <h2>Backup & Pemulihan Data</h2>
           </div>
           <p className="text-xs text-stone-500 dark:text-stone-400 mb-4">
-            Unduh seluruh catatan, review card, progress roadmap, jurnal, dan riwayat XP dalam format file JSON.
+            Unduh seluruh catatan belajar, progress roadmap, jurnal, dan statistik sebagai cadangan file JSON, atau pulihkan data dari file sebelumnya.
           </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-1">
+            {/* Export Button */}
             <button
               onClick={handleExport}
               disabled={downloading}
@@ -108,13 +124,16 @@ export default function SettingsPage() {
               {downloading ? 'Mengekspor...' : 'Ekspor Semua Data (JSON)'}
             </button>
 
-            {downloadSuccess && (
-              <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                <CheckCircle2 className="w-4 h-4" />
-                Data berhasil diunduh!
-              </span>
-            )}
+            {/* Import Button */}
+            <ImportDataButton />
           </div>
+
+          {downloadSuccess && (
+            <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-3">
+              <CheckCircle2 className="w-4 h-4" />
+              Data berhasil diunduh ke komputer Anda!
+            </p>
+          )}
         </div>
       </div>
     </div>

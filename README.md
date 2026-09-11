@@ -42,6 +42,17 @@ DIRECT_URL="postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGI
 
 # Kunci Rahasia JWT (minimal 32 karakter acak)
 JWT_SECRET="ganti-dengan-string-rahasia-panjang-dan-acak-di-sini!"
+
+# Telegram Bot (opsional — untuk fitur reminder harian)
+# Token didapat dari @BotFather di Telegram
+TELEGRAM_BOT_TOKEN="123456789:AAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Secret untuk mengamankan endpoint cron (/api/cron/reminder)
+# Buat string acak panjang, isi di Vercel Environment Variables juga
+CRON_SECRET="string-rahasia-cron-yang-aman"
+
+# Gemini API Key (gratis di aistudio.google.com) — untuk AI Note Review
+GEMINI_API_KEY="AIzaSy..."
 ```
 
 ### 3. Push Skema ke Supabase
@@ -90,6 +101,9 @@ Karena aplikasi ini berkonsep **single-user** (tanpa registrasi publik untuk men
    - `DATABASE_URL`: Connection pooling string Supabase (Port 6543).
    - `DIRECT_URL`: Direct connection string Supabase (Port 5432).
    - `JWT_SECRET`: Random secret key yang aman.
+   - `TELEGRAM_BOT_TOKEN` *(opsional)*: Token dari @BotFather — untuk reminder harian.
+   - `CRON_SECRET` *(opsional)*: Secret acak untuk mengamankan endpoint `/api/cron/reminder`.
+   - `GEMINI_API_KEY` *(opsional)*: API key dari [aistudio.google.com](https://aistudio.google.com) (gratis) — untuk AI Note Review.
 4. Klik **Deploy**! Vercel akan mem-build project secara otomatis.
 
 ---

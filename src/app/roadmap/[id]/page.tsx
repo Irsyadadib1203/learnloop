@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
 import { NoteCard } from '@/components/notes/NoteCard';
 import { StageModal } from '@/components/roadmap/StageModal';
+import { RoadmapTaskChecklist } from '@/components/roadmap/RoadmapTaskChecklist';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { 
@@ -260,6 +261,13 @@ export default function StageDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Sub-tahap Checklist (Roadmap Tasks) */}
+      <RoadmapTaskChecklist
+        stageId={stage.id}
+        initialTasks={stage.tasks || []}
+        onTasksChange={fetchStage}
+      />
 
       {/* Linked Notes Section */}
       <div className="space-y-4">

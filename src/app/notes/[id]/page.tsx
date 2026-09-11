@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { NoteForm } from '@/components/notes/NoteForm';
+import { AiReviewSection } from '@/components/notes/AiReviewSection';
 import { ArrowLeft, Clock, Calendar, ShieldCheck } from 'lucide-react';
 import { LEITNER_INTERVAL_DAYS } from '@/lib/spacedRepetition';
 
@@ -86,6 +87,13 @@ export default async function NoteDetailPage({
           </div>
         </div>
       )}
+
+      {/* AI Review Section */}
+      <AiReviewSection
+        noteId={note.id}
+        initialFeedback={note.aiReviewFeedback}
+        initialReviewedAt={note.aiReviewedAt ? note.aiReviewedAt.toISOString() : null}
+      />
 
       {/* Form Container */}
       <div className="bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 rounded-3xl p-6 sm:p-8 shadow-xs">

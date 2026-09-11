@@ -12,7 +12,10 @@ export async function GET() {
 
     const [notes, roadmapStages, journalEntries, userStats, xpLogs] = await Promise.all([
       prisma.note.findMany({ include: { reviewCard: true, stage: true } }),
-      prisma.roadmapStage.findMany({ orderBy: { order: 'asc' } }),
+      prisma.roadmapStage.findMany({
+        include: { tasks: true },
+        orderBy: { order: 'asc' },
+      }),
       prisma.journalEntry.findMany({ orderBy: { date: 'desc' } }),
       prisma.userStats.findUnique({ where: { id: 'singleton' } }),
       prisma.xpLog.findMany({ orderBy: { createdAt: 'desc' } }),
