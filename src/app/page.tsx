@@ -15,84 +15,64 @@ import { Button } from '@/components/ui/Button';
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // 1. Ambil User Stats & Hitung Gamifikasi
-  let stats = await prisma.userStats.findUnique({
-    where: { id: 'singleton' },
-  });
-
-  if (!stats) {
-    stats = await prisma.userStats.create({
-      data: {
-        id: 'singleton',
-        totalXP: 0,
-        currentStreak: 0,
-        longestStreak: 0,
+  // Parallelize ALL database queries simultaneously in a single network turn
+  const [
+    user,
+    rawStats,
+    dueCards,
+    staleCards,
+    stages,
+    todayMood,
+    recentNotes,
+    totalNotesCount,
+  ] = await Promise.all([
+    getCurrentUser(),
+    prisma.userStats.findUnique({ where: { id: 'singleton' } }),
+    prisma.reviewCard.findMany({
+      where: { nextReviewDate: { lte: now } },
+      include: { note: true },
+    }),
+    prisma.reviewCard.findMany({
+      where: {
+        OR: [
+          { lastReviewedAt: { lte: sevenDaysAgo } },
+          { lastReviewedAt: null, createdAt: { lte: sevenDaysAgo } },
+        ],
       },
-    });
-  }
+      include: { note: { select: { topic: true } } },
+    }),
+    prisma.roadmapStage.findMany({ orderBy: { order: 'asc' } }),
+    prisma.moodLog.findFirst({
+      where: { createdAt: { gte: today } },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.note.findMany({
+      take: 4,
+      orderBy: { updatedAt: 'desc' },
+      include: { reviewCard: true, stage: true },
+    }),
+    prisma.note.count(),
+  ]);
+
+  const stats = rawStats || {
+    totalXP: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+  };
 
   const levelInfo = calculateLevelInfo(stats.totalXP);
-
-  // 2. Ambil Kartu Review yang jatuh tempo (<= sekarang)
-  const now = new Date();
-  const dueCards = await prisma.reviewCard.findMany({
-    where: {
-      nextReviewDate: { lte: now },
-    },
-    include: {
-      note: true,
-    },
-  });
-
-  // 3. Ambil topik yang belum disentuh > 7 hari
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const staleCards = await prisma.reviewCard.findMany({
-    where: {
-      OR: [
-        { lastReviewedAt: { lte: sevenDaysAgo } },
-        { lastReviewedAt: null, createdAt: { lte: sevenDaysAgo } },
-      ],
-    },
-    include: {
-      note: { select: { topic: true } },
-    },
-  });
-
   const staleTopics = Array.from(new Set(staleCards.map((c) => c.note.topic)));
 
-  // 4. Ambil data Roadmap Stages untuk ActiveRoadmapWidget
-  const stages = await prisma.roadmapStage.findMany({
-    orderBy: { order: 'asc' },
-  });
   const totalStages = stages.length;
   const completedStages = stages.filter((s) => s.status === 'DONE').length;
   const inProgressStage = stages.find((s) => s.status === 'IN_PROGRESS') || null;
   const roadmapProgressPercent =
     totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
-
-  // 5. Ambil mood hari ini
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayMood = await prisma.moodLog.findFirst({
-    where: { createdAt: { gte: today } },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  // 6. Ambil 4 catatan terbaru
-  const recentNotes = await prisma.note.findMany({
-    take: 4,
-    orderBy: { updatedAt: 'desc' },
-    include: {
-      reviewCard: true,
-      stage: true,
-    },
-  });
-
-  const totalNotesCount = await prisma.note.count();
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -108,7 +88,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <Link href="/notes/new">
+        <Link href="/notes/new" prefetch={true}>
           <Button variant="primary" size="md">
             <Plus className="w-4 h-4 mr-1.5" />
             <span>Tulis Catatan Baru</span>
@@ -164,6 +144,7 @@ export default async function DashboardPage() {
           <div className="pt-3 mt-2 border-t border-stone-100 dark:border-stone-800 flex justify-end">
             <Link
               href="/notes"
+              prefetch={true}
               className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1"
             >
               <span>Buka Semua Koleksi</span>
@@ -184,6 +165,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/notes"
+            prefetch={true}
             className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1"
           >
             <span>Buka Semua ({totalNotesCount})</span>
@@ -196,7 +178,7 @@ export default async function DashboardPage() {
             <p className="text-sm text-stone-500 mb-4">
               Belum ada catatan belajar yang tersimpan.
             </p>
-            <Link href="/notes/new">
+            <Link href="/notes/new" prefetch={true}>
               <Button variant="primary" size="sm">
                 <Plus className="w-4 h-4 mr-1.5" />
                 <span>Buat Catatan Pertamamu</span>

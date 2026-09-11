@@ -12,10 +12,14 @@ export async function GET() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const xpLogs = await prisma.xpLog.findMany({
-      where: { createdAt: { gte: sevenDaysAgo } },
-      orderBy: { createdAt: 'asc' },
-    });
+    // Fetch both in parallel
+    const [xpLogs, notes] = await Promise.all([
+      prisma.xpLog.findMany({
+        where: { createdAt: { gte: sevenDaysAgo } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.note.findMany({ select: { topic: true } }),
+    ]);
 
     // Build a map of date-string → total XP for last 7 days
     const dateMap: Record<string, number> = {};
@@ -39,7 +43,6 @@ export async function GET() {
     const weeklyXP = Object.entries(dateMap).map(([date, xp]) => ({ date, xp }));
 
     // --- Topic Distribution from Note table ---
-    const notes = await prisma.note.findMany({ select: { topic: true } });
     const topicCount: Record<string, number> = {};
     for (const note of notes) {
       topicCount[note.topic] = (topicCount[note.topic] ?? 0) + 1;

@@ -35,28 +35,28 @@ export async function GET(request: Request) {
       where.stageId = stageId;
     }
 
-    const notes = await prisma.note.findMany({
-      where,
-      include: {
-        reviewCard: true,
-        stage: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
+    const [notes, allTopics] = await Promise.all([
+      prisma.note.findMany({
+        where,
+        include: {
+          reviewCard: true,
+          stage: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    // Ambil daftar unik semua topik untuk filter buttons
-    const allTopics = await prisma.note.findMany({
-      select: { topic: true },
-      distinct: ['topic'],
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      prisma.note.findMany({
+        select: { topic: true },
+        distinct: ['topic'],
+      }),
+    ]);
 
     const topics = allTopics.map((t) => t.topic);
 

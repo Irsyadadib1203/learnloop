@@ -33,6 +33,7 @@ export default async function JournalPage() {
 
         <Link
           href="/journal/new"
+          prefetch={true}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white shadow-sm shadow-orange-500/20 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
@@ -54,6 +55,7 @@ export default async function JournalPage() {
           </p>
           <Link
             href="/journal/new"
+            prefetch={true}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />

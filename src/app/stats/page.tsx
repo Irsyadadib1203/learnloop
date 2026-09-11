@@ -16,34 +16,36 @@ import {
 export const dynamic = 'force-dynamic';
 
 export default async function StatsPage() {
-  // 1. Fetch user stats
-  const stats = await prisma.userStats.findUnique({
-    where: { id: 'singleton' },
-  });
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  const totalXP = stats?.totalXP ?? 0;
-  const currentStreak = stats?.currentStreak ?? 0;
-  const longestStreak = stats?.longestStreak ?? 0;
-  const levelInfo = calculateLevelInfo(totalXP);
-
-  // 2. Fetch counts
-  const [totalNotes, totalReviews, totalJournals] = await Promise.all([
+  // Parallelize ALL database queries simultaneously
+  const [
+    stats,
+    totalNotes,
+    totalReviews,
+    totalJournals,
+    xpLogs,
+    notes,
+  ] = await Promise.all([
+    prisma.userStats.findUnique({ where: { id: 'singleton' } }),
     prisma.note.count(),
     prisma.reviewCard.count({
       where: { lastReviewedAt: { not: null } },
     }),
     prisma.journalEntry.count(),
+    prisma.xpLog.findMany({
+      where: { createdAt: { gte: sevenDaysAgo } },
+      orderBy: { createdAt: 'asc' },
+    }),
+    prisma.note.findMany({ select: { topic: true } }),
   ]);
 
-  // 3. Weekly XP aggregation (last 7 days from XpLog)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
-
-  const xpLogs = await prisma.xpLog.findMany({
-    where: { createdAt: { gte: sevenDaysAgo } },
-    orderBy: { createdAt: 'asc' },
-  });
+  const totalXP = stats?.totalXP ?? 0;
+  const currentStreak = stats?.currentStreak ?? 0;
+  const longestStreak = stats?.longestStreak ?? 0;
+  const levelInfo = calculateLevelInfo(totalXP);
 
   const dateMap: Record<string, number> = {};
   for (let i = 6; i >= 0; i--) {
@@ -66,8 +68,7 @@ export default async function StatsPage() {
   const weeklyXP = Object.entries(dateMap).map(([date, xp]) => ({ date, xp }));
   const weeklyTotalXP = weeklyXP.reduce((sum, item) => sum + item.xp, 0);
 
-  // 4. Topic distribution
-  const notes = await prisma.note.findMany({ select: { topic: true } });
+  // 4. Topic distribution (calculated from parallel-fetched notes)
   const topicCount: Record<string, number> = {};
   for (const n of notes) {
     topicCount[n.topic] = (topicCount[n.topic] ?? 0) + 1;

@@ -38,9 +38,8 @@ function LoginFormContent() {
         throw new Error(data.error || 'Login gagal. Periksa kembali username/password.');
       }
 
-      // Berhasil login, arahkan ke target route atau dashboard
-      router.push(from);
-      router.refresh();
+      // Berhasil login, arahkan ke target route atau dashboard dengan navigasi bersih
+      window.location.href = from;
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

@@ -78,9 +78,10 @@ export const Navbar: React.FC<{ username?: string }> = ({ username = 'Irsyad' })
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  prefetch={true}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium active:scale-95 transition-all ${
                     isActive
-                      ? 'bg-stone-100 dark:bg-stone-800 text-orange-600 dark:text-orange-400'
+                      ? 'bg-stone-100 dark:bg-stone-800 text-orange-600 dark:text-orange-400 font-semibold'
                       : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-800/50'
                   }`}
                 >
@@ -96,6 +97,7 @@ export const Navbar: React.FC<{ username?: string }> = ({ username = 'Irsyad' })
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/notes/new"
+            prefetch={true}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white shadow-sm shadow-orange-500/20 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -122,7 +124,8 @@ export const Navbar: React.FC<{ username?: string }> = ({ username = 'Irsyad' })
         <div className="flex items-center gap-2 md:hidden">
           <Link
             href="/notes/new"
-            className="p-2 rounded-lg bg-orange-500 text-white shadow-sm"
+            prefetch={true}
+            className="p-2 rounded-lg bg-orange-500 text-white shadow-sm active:scale-95 transition-transform"
           >
             <Plus className="w-5 h-5" />
           </Link>
@@ -145,10 +148,11 @@ export const Navbar: React.FC<{ username?: string }> = ({ username = 'Irsyad' })
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={true}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium ${
                   isActive
-                    ? 'bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    ? 'bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 font-semibold'
                     : 'text-stone-700 dark:text-stone-300'
                 }`}
               >
