@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum MasteryStatus {
+  MASTER
+  STILL_UNSURE
+}
+
+enum ReviewResult {
+  FORGOT
+  PARTIAL
+  REMEMBERED
+}
+
+enum StageStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model RoadmapStage {
+  id          String      @id @default(cuid())
+  title       String
+  description String      @db.Text
+  order       Int         @default(0)
+  status      StageStatus @default(NOT_STARTED)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  notes       Note[]
+}
+
+model Note {
+  id            String        @id @default(cuid())
+  title         String
+  topic         String
+  content       String        @db.Text
+  whyImportant  String?       @db.Text
+  codeExample   String?       @db.Text
+  masteryStatus MasteryStatus @default(STILL_UNSURE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  stageId       String?
+  stage         RoadmapStage? @relation(fields: [stageId], references: [id], onDelete: SetNull)
+
+  reviewCard    ReviewCard?
+}
+
+model ReviewCard {
+  id             String        @id @default(cuid())
+  noteId         String        @unique
+  note           Note          @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  intervalStage  Int           @default(0) // 0: 1 day, 1: 3 days, 2: 7 days, 3: 14 days, 4: 30 days
+  nextReviewDate DateTime      @default(now())
+  lastReviewedAt DateTime?
+  lastResult     ReviewResult?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model UserStats {
+  id               String    @id @default("singleton")
+  totalXP          Int       @default(0)
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastActivityDate DateTime?
+  updatedAt        DateTime  @updatedAt
+}
+
+model MoodLog {
+  id        String   @id @default(cuid())
+  mood      String   // e.g. "fire", "calm", "tired", "dizzy"
+  createdAt DateTime @default(now())
+}
+
+model JournalEntry {
+  id         String   @id @default(cuid())
+  date       DateTime @default(now())
+  content    String   @db.Text
+  challenges String?  @db.Text
+  mood       String   // "fire", "calm", "tired", "dizzy"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model XpLog {
+  id        String   @id @default(cuid())
+  amount    Int
+  source    String   // "note_created" | "review_forgot" | "review_partial" | "review_remembered" | "roadmap_stage_completed" | "journal_entry"
+  createdAt DateTime @default(now())
+}

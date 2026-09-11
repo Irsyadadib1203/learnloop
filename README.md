@@ -1,36 +1,103 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔄 LearnLoop — Personal Learning Notes & Progress Tracker
 
-## Getting Started
+LearnLoop adalah web app pribadi yang menggabungkan pencatatan konsep teknis (dengan bahasa sendiri), sistem pengulangan terjadwal (*spaced repetition* Leitner box ala flashcard), pelacak roadmap visual, dan gamifikasi ringan (streak, XP, level) untuk membantu penguasaan skill teknis jangka panjang.
 
-First, run the development server:
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router, TypeScript)
+- **Styling**: Tailwind CSS v4 & `@tailwindcss/typography`
+- **Database & ORM**: Supabase (PostgreSQL) + Prisma ORM
+- **Autentikasi**: Single-User Auth (Password hashing dengan `bcryptjs`, session JWT via `jose` dalam `httpOnly` cookie, dilindungi `middleware.ts`)
+- **Animasi & Interaksi**: Framer Motion & `canvas-confetti`
+- **Markdown**: `react-markdown` + `remark-gfm`
+
+---
+
+## 🚀 Panduan Setup & Instalasi
+
+### 1. Persiapan Supabase Database
+
+1. Buka [Supabase](https://supabase.com) dan buat project baru.
+2. Masuk ke menu **Project Settings** $\rightarrow$ **Database**.
+3. Di bagian **Connection string**:
+   - Pilih tab **Connection Pooling** (Mode: Transaction, Port `6543`). Salin string ini untuk `DATABASE_URL`. String ini sangat penting untuk serverless runtime Next.js / Vercel agar koneksi database tidak habis.
+   - Pilih tab **Direct connection** (Port `5432`). Salin string ini untuk `DIRECT_URL` (digunakan untuk migrasi Prisma & seeding).
+
+### 2. Konfigurasi Lingkungan (`.env`)
+
+Salin file `.env.example` menjadi `.env`:
+```bash
+cp .env.example .env
+```
+
+Isi variabel di dalam `.env`:
+```env
+# Supabase Transaction Pooler (Port 6543)
+DATABASE_URL="postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# Supabase Direct Connection (Port 5432)
+DIRECT_URL="postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+
+# Kunci Rahasia JWT (minimal 32 karakter acak)
+JWT_SECRET="ganti-dengan-string-rahasia-panjang-dan-acak-di-sini!"
+```
+
+### 3. Push Skema ke Supabase
+
+Jalankan perintah berikut untuk mengaplikasikan skema PostgreSQL ke Supabase:
+```bash
+npx prisma db push
+```
+
+### 4. Seeding Data Awal
+
+Jalankan seed untuk membuat akun default admin dan catatan pembelajaran percontohan (Laravel Service Layer, Queue, Next.js Server Components, Golang Concurrency):
+```bash
+npx prisma db seed
+```
+
+> 🔑 **Kredensial Default:**
+> - **Username**: `irsyad`
+> - **Password**: `learnloop123!`
+
+### 5. Menjalankan Server Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Buka browser di `http://localhost:3000`. Jika belum login, rute otomatis diarahkan ke `/login`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔒 Mengganti Password Default
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Karena aplikasi ini berkonsep **single-user** (tanpa registrasi publik untuk mencegah orang lain mendaftar), Anda dapat mengganti password kapan saja melalui:
+1. Mengubah password pada file `prisma/seed.ts` lalu jalankan ulang `npx prisma db seed`, atau
+2. Menggunakan Prisma Studio untuk mengedit hash password:
+   ```bash
+   npx prisma studio
+   ```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ☁️ Panduan Deploy ke Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push repository Anda ke GitHub.
+2. Import repository di dashboard [Vercel](https://vercel.com).
+3. Tambahkan **Environment Variables** di Vercel Settings:
+   - `DATABASE_URL`: Connection pooling string Supabase (Port 6543).
+   - `DIRECT_URL`: Direct connection string Supabase (Port 5432).
+   - `JWT_SECRET`: Random secret key yang aman.
+4. Klik **Deploy**! Vercel akan mem-build project secara otomatis.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 💡 Navigasi Cepat Keyboard pada Sesi Review
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Saat berada di halaman review flashcard (`/review`):
+- `[Spasi]`: Menampilkan jawaban kartu (*reveal*).
+- `[1]`: Tandai **Lupa** (Kartu diulang besok, stage reset ke 0).
+- `[2]`: Tandai **Ingat Sebagian** (Interval bertahan di tahap saat ini).
+- `[3]`: Tandai **Ingat Jelas** (Naik ke tahap Leitner berikutnya: 3 hari $\rightarrow$ 7 hari $\rightarrow$ 14 hari $\rightarrow$ 30 hari).
