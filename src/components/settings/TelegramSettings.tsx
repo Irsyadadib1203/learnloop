@@ -88,13 +88,17 @@ export const TelegramSettings: React.FC = () => {
       <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900/60 text-xs text-sky-900 dark:text-sky-200 space-y-2">
         <div className="flex items-center gap-1.5 font-bold">
           <Info className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
-          <span>Cara Mengetahui Chat ID Telegram:</span>
+          <span>Panduan Penting Menghubungkan Telegram:</span>
         </div>
-        <ol className="list-decimal list-inside space-y-1 text-sky-800 dark:text-sky-300">
-          <li>Buka Telegram dan cari bot <strong>@userinfobot</strong></li>
-          <li>Kirim pesan apapun atau klik <em>/start</em></li>
-          <li>Salin angka <strong>Id</strong> yang diberikan (contoh: <code>123456789</code>)</li>
-          <li>Pastikan kamu juga sudah membuka bot LearnLoop dan klik <em>/start</em></li>
+        <ol className="list-decimal list-inside space-y-1.5 text-sky-800 dark:text-sky-300">
+          <li>Buka Telegram, cari bot <strong>@userinfobot</strong>, klik <em>/start</em> untuk menyalin angka <strong>Id</strong> Anda (contoh: <code>123456789</code>).</li>
+          <li>
+            <strong className="text-amber-700 dark:text-amber-400">WAJIB:</strong> Buka bot yang Anda buat di <strong>@BotFather</strong>, lalu klik tombol <strong>START</strong> (atau kirim <code>/start</code>) ke bot Anda.
+            <p className="pl-4 mt-0.5 text-[11px] text-stone-500 dark:text-stone-400 italic">
+              *Jika belum menekan Start pada bot Anda, Telegram akan menolak pesan dengan error &apos;chat not found&apos;.
+            </p>
+          </li>
+          <li>Paste angka Chat ID di bawah ini, lalu klik <strong>Simpan Chat ID</strong> dan <strong>Tes Kirim Pesan</strong>.</li>
         </ol>
       </div>
 

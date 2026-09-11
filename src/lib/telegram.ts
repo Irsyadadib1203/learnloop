@@ -32,9 +32,13 @@ export async function sendTelegramMessage(
 
     if (!response.ok || !data.ok) {
       console.error('Telegram API error:', data);
+      let desc = data.description || 'Gagal mengirim pesan Telegram.';
+      if (desc.includes('chat not found')) {
+        desc = 'Chat tidak ditemukan. Pastikan Anda sudah membuka bot Anda di Telegram dan menekan tombol START (/start) terlebih dahulu, serta Chat ID berupa angka yang benar.';
+      }
       return {
         success: false,
-        error: data.description || 'Gagal mengirim pesan Telegram.',
+        error: desc,
       };
     }
 
