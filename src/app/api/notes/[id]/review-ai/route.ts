@@ -53,7 +53,10 @@ ${note.codeExample || 'Tidak ada kode'}`;
       ],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 350,
+        maxOutputTokens: 500,
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
       },
     };
 
@@ -96,9 +99,13 @@ ${note.codeExample || 'Tidak ada kode'}`;
     }
 
     const data = await geminiRes.json();
+    const parts = data.candidates?.[0]?.content?.parts || [];
     const feedbackText =
-      data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      'Tidak ada feedback yang dihasilkan.';
+      parts
+        .filter((p: { thought?: boolean; text?: string }) => !p.thought && p.text)
+        .map((p: { text?: string }) => p.text)
+        .join('\n')
+        .trim() || 'Tidak ada feedback yang dihasilkan.';
 
     const now = new Date();
     const updatedNote = await prisma.note.update({
