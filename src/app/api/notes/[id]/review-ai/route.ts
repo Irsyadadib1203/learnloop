@@ -57,52 +57,41 @@ ${note.codeExample || 'Tidak ada kode'}`;
       },
     };
 
-    // Coba gemini-2.0-flash terlebih dahulu, jika model belum aktif di akun user coba fallback ke gemini-1.5-flash
-    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-    let geminiRes: Response | null = null;
-    let lastErrorMsg = '';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
 
-    for (const model of modelsToTry) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      try {
-        geminiRes = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+    const geminiRes = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-        if (geminiRes.ok) {
-          break;
-        }
-
-        if (geminiRes.status === 429) {
-          return NextResponse.json(
-            { error: 'Kuota harian AI review gratis sedang penuh / rate limit. Silakan coba lagi beberapa saat lagi.' },
-            { status: 429 }
-          );
-        }
-
-        const errData = (await geminiRes.json().catch(() => ({}))) as {
-          error?: { message?: string; status?: string; code?: number };
-        };
-        lastErrorMsg = errData?.error?.message || `HTTP ${geminiRes.status}`;
-        console.error(`Gemini API error with model ${model}:`, errData);
-
-        // Jika bukan 404 (model not found), jangan looping model lain, langsung laporkan
-        if (geminiRes.status !== 404) {
-          break;
-        }
-      } catch (fetchErr) {
-        lastErrorMsg = fetchErr instanceof Error ? fetchErr.message : 'Koneksi gagal';
+    if (!geminiRes.ok) {
+      if (geminiRes.status === 429) {
+        return NextResponse.json(
+          { error: 'Kuota harian AI review gratis sedang penuh / rate limit. Silakan coba lagi beberapa saat lagi.' },
+          { status: 429 }
+        );
       }
-    }
 
-    if (!geminiRes || !geminiRes.ok) {
+      const errData = (await geminiRes.json().catch(() => ({}))) as {
+        error?: { message?: string; status?: string; code?: number };
+      };
+      console.error('Gemini API error:', errData);
+
+      const errorMsg = errData?.error?.message || '';
+
+      if (geminiRes.status === 404 && errorMsg.includes('is not found for API version')) {
+        return NextResponse.json(
+          { error: 'Model AI sedang tidak tersedia, coba beberapa saat lagi.' },
+          { status: 404 }
+        );
+      }
+
       return NextResponse.json(
         {
-          error: `Gagal menghubungi Google Gemini AI: ${lastErrorMsg}. Periksa kembali GEMINI_API_KEY Anda.`,
+          error: `Gagal menghubungi Google Gemini AI: ${errorMsg || `HTTP ${geminiRes.status}`}. Periksa kembali GEMINI_API_KEY Anda.`,
         },
-        { status: 500 }
+        { status: geminiRes.status || 500 }
       );
     }
 
